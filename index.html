@@ -331,21 +331,6 @@ footer p { font-size:0.78rem; color:var(--muted); }
     <div class="stat-item"><div class="stat-num">$0</div><div class="stat-label">To Get Started</div></div>
   </div>
 
-  <div class="photos-section">
-    <div class="team-photo">
-      <img src="images/photo1.jpg" alt="Andrew Curtis and team">
-      <div class="team-photo-label">The GoodPT Team</div>
-    </div>
-    <div class="team-photo">
-      <img src="images/photo2.jpg" alt="Andrew Curtis outdoors">
-      <div class="team-photo-label">Always Moving Forward</div>
-    </div>
-    <div class="team-photo">
-      <img src="images/photo3.jpg" alt="Andrew Curtis in nature">
-      <div class="team-photo-label">Training in the Wild</div>
-    </div>
-  </div>
-
   <footer>
     <div class="logo-mark" onclick="showPage('home')">
       <div class="logo-icon" style="width:28px;height:28px;font-size:0.85rem">GP</div>
@@ -359,7 +344,7 @@ footer p { font-size:0.78rem; color:var(--muted); }
 <div class="page" id="page-about">
   <div class="page-hero">
     <div class="page-tag anim anim-1">// About Us</div>
-    <h1 class="page-title anim anim-2">MEET THE<br><span style="color:var(--accent)">TEAM.</span></h1>
+    <h1 class="page-title anim anim-2">MEET<br><span style="color:var(--accent)">ANDREW.</span></h1>
   </div>
 
   <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;padding:3rem 5rem 0;">
@@ -380,17 +365,10 @@ footer p { font-size:0.78rem; color:var(--muted); }
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:4rem;padding:3rem 5rem 5rem;">
     <div class="anim anim-2">
       <div class="page-tag" style="margin-bottom:0.8rem;">// Andrew Curtis · Founder</div>
-      <h2 style="font-family:'Bebas Neue',sans-serif;font-size:2.5rem;letter-spacing:0.03em;margin-bottom:1.2rem;">MECHANICAL ENGINEER.<br><span style="color:var(--accent)">FITNESS BELIEVER.</span></h2>
+      <h2 style="font-family:'Bebas Neue',sans-serif;font-size:2.5rem;letter-spacing:0.03em;margin-bottom:1.2rem;"><span style="color:var(--accent)">FITNESS BELIEVER.</span></h2>
       <p style="font-size:1rem;line-height:1.8;color:#b0c8b8;margin-bottom:1rem;">I'm a third-year Mechanical Engineering student at Penn State with a deep interest in the marine industry and a belief that technology should make life better — including your workouts.</p>
-      <p style="font-size:1rem;line-height:1.8;color:#b0c8b8;margin-bottom:1rem;">I built GoodPT because most people don't fail at fitness from lack of effort — they fail from lack of direction. As an engineer, I design systems that solve real problems. GoodPT is that system for your health.</p>
+      <p style="font-size:1rem;line-height:1.8;color:#b0c8b8;margin-bottom:1rem;">I've struggled personally to find effective treatment for my own injuries, and that experience showed me how much people need better guidance. AI is a powerful tool that can aid in recovery — and that's a big part of why I built GoodPT.</p>
       <p style="font-size:1rem;line-height:1.8;color:#b0c8b8;margin-bottom:1.8rem;">Whether you're just starting out or trying to level up, GoodPT gives you the plan, the coach, and the support to actually get there.</p>
-      <div class="about-badges">
-        <span class="badge">Penn State ME</span>
-        <span class="badge">Marine Industry</span>
-        <span class="badge">AI &amp; Product</span>
-        <span class="badge">Fitness &amp; Health</span>
-        <span class="badge">Systems Thinking</span>
-      </div>
     </div>
     <div class="anim anim-3">
       <div class="video-container">
@@ -490,14 +468,14 @@ footer p { font-size:0.78rem; color:var(--muted); }
           <div class="contact-item-icon">👤</div>
           <div class="contact-item-text">
             <strong>Founder</strong>
-            Andrew Curtis — Penn State ME
+            Andrew Curtis
           </div>
         </div>
         <div class="contact-item">
           <div class="contact-item-icon">📧</div>
           <div class="contact-item-text">
             <strong>Email</strong>
-            <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="9dfcf0fea4afa8a4ddedeee8b3f8f9e8">[email&#160;protected]</a>
+            amc9259@psu.edu
           </div>
         </div>
         <div class="contact-item">
@@ -563,14 +541,37 @@ function submitHomeForm() {
   document.getElementById('home-confirm').style.display = 'block';
 }
 
-function submitContact() {
+async function submitContact() {
   const name = document.getElementById('c-name').value.trim();
   const email = document.getElementById('c-email').value.trim();
   const msg = document.getElementById('c-msg').value.trim();
   if (!name || !email || !msg) { alert('Please fill in all fields.'); return; }
-  document.querySelectorAll('#contact-form-wrap .form-group').forEach(g => g.style.display = 'none');
-  document.querySelector('#contact-form-wrap .btn-primary').style.display = 'none';
-  document.getElementById('contact-confirm').style.display = 'block';
+
+  const btn = document.querySelector('#contact-form-wrap .btn-primary');
+  btn.textContent = 'SENDING...';
+  btn.disabled = true;
+
+  try {
+    const res = await fetch('https://formspree.io/f/xojpgqdq', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({ name, email, message: msg })
+    });
+
+    if (res.ok) {
+      document.querySelectorAll('#contact-form-wrap .form-group').forEach(g => g.style.display = 'none');
+      btn.style.display = 'none';
+      document.getElementById('contact-confirm').style.display = 'block';
+    } else {
+      alert('Something went wrong. Please try again.');
+      btn.textContent = 'SEND MESSAGE →';
+      btn.disabled = false;
+    }
+  } catch (err) {
+    alert('Connection error. Please try again.');
+    btn.textContent = 'SEND MESSAGE →';
+    btn.disabled = false;
+  }
 }
 
 // ── AI COACH (demo replies) ────────────────────────────────────
