@@ -231,7 +231,7 @@ h1 em { color:var(--accent); font-style:normal; display:block; }
 .demo-shell { background:var(--surface); border:1px solid var(--border); border-radius:8px; overflow:hidden; max-width:800px; }
 .demo-toolbar { background:var(--surface2); padding:0.75rem 1.2rem; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:0.6rem; }
 .demo-dot { width:10px; height:10px; border-radius:50%; }
-.demo-body { padding:1.5rem; display:flex; flex-direction:column; gap:1rem; min-height:280px; }
+.demo-body { padding:1.5rem; display:flex; flex-direction:column; gap:1rem; min-height:280px; max-height:420px; overflow-y:auto; }
 .demo-msg { max-width:75%; }
 .demo-msg.ai { align-self:flex-start; }
 .demo-msg.user { align-self:flex-end; }
@@ -244,7 +244,8 @@ h1 em { color:var(--accent); font-style:normal; display:block; }
 .demo-input::placeholder { color:var(--muted); }
 .demo-send { background:var(--accent); border:none; border-radius:4px; width:40px; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:1rem; transition:transform 0.15s; }
 .demo-send:hover { transform:scale(1.06); }
-.demo-coming-soon { text-align:center; padding:2rem 1rem; color:var(--muted); font-size:0.82rem; font-family:'Space Mono',monospace; border-top:1px solid var(--border); }
+.demo-send:disabled { opacity:0.5; cursor:not-allowed; transform:none; }
+.demo-status { text-align:center; padding:0.75rem 1rem; color:var(--accent); font-size:0.78rem; font-family:'Space Mono',monospace; border-top:1px solid var(--border); }
 
 /* CONTACT */
 .contact-layout { display:grid; grid-template-columns:1fr 1.4fr; gap:4rem; padding:4rem 5rem; }
@@ -451,7 +452,7 @@ footer p { font-size:0.78rem; color:var(--muted); }
         <div class="demo-dot" style="background:#ff5f57"></div>
         <div class="demo-dot" style="background:#febc2e"></div>
         <div class="demo-dot" style="background:#28c840"></div>
-        <span style="font-family:'Space Mono',monospace;font-size:0.68rem;color:var(--muted);margin-left:0.5rem">GoodPT AI Coach — Demo</span>
+        <span style="font-family:'Space Mono',monospace;font-size:0.68rem;color:var(--muted);margin-left:0.5rem">GoodPT AI Coach — Live</span>
       </div>
       <div class="demo-body" id="demoMessages">
         <div class="demo-msg ai">
@@ -459,10 +460,10 @@ footer p { font-size:0.78rem; color:var(--muted); }
         </div>
       </div>
       <div class="demo-input-row">
-        <input type="text" class="demo-input" id="demoInput" placeholder="Ask the AI coach anything..." onkeydown="if(event.key==='Enter')sendDemo()">
-        <button class="demo-send" onclick="sendDemo()">➤</button>
+        <input type="text" class="demo-input" id="demoInput" placeholder="Ask the AI coach anything...">
+        <button class="demo-send" id="demoSendBtn" onclick="sendDemo()">➤</button>
       </div>
-      <div class="demo-coming-soon">⚡ Full AI powered by Claude · Coming Week 3</div>
+      <div class="demo-status">⚡ Powered by Claude AI · Ask me anything</div>
     </div>
   </div>
   <footer>
@@ -496,7 +497,7 @@ footer p { font-size:0.78rem; color:var(--muted); }
           <div class="contact-item-icon">📧</div>
           <div class="contact-item-text">
             <strong>Email</strong>
-            amc9259@psu.edu
+            <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="9dfcf0fea4afa8a4ddedeee8b3f8f9e8">[email&#160;protected]</a>
           </div>
         </div>
         <div class="contact-item">
@@ -543,15 +544,17 @@ footer p { font-size:0.78rem; color:var(--muted); }
   </footer>
 </div>
 
-<script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 function showPage(name) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('nav ul li a').forEach(a => a.classList.remove('active'));
   document.getElementById('page-' + name).classList.add('active');
-  document.getElementById('nav-' + name).classList.add('active');
-  window.scrollTo(0,0);
+  const navEl = document.getElementById('nav-' + name);
+  if (navEl) navEl.classList.add('active');
+  window.scrollTo(0, 0);
   return false;
 }
+
 function submitHomeForm() {
   const name = document.getElementById('home-name').value.trim();
   const email = document.getElementById('home-email').value.trim();
@@ -559,44 +562,50 @@ function submitHomeForm() {
   document.getElementById('home-form-fields').style.display = 'none';
   document.getElementById('home-confirm').style.display = 'block';
 }
+
 function submitContact() {
   const name = document.getElementById('c-name').value.trim();
   const email = document.getElementById('c-email').value.trim();
   const msg = document.getElementById('c-msg').value.trim();
   if (!name || !email || !msg) { alert('Please fill in all fields.'); return; }
-  document.querySelectorAll('#contact-form-wrap .form-group').forEach(g => g.style.display='none');
-  document.querySelector('#contact-form-wrap .btn-primary').style.display='none';
+  document.querySelectorAll('#contact-form-wrap .form-group').forEach(g => g.style.display = 'none');
+  document.querySelector('#contact-form-wrap .btn-primary').style.display = 'none';
   document.getElementById('contact-confirm').style.display = 'block';
 }
+
+// ── AI COACH (demo replies) ────────────────────────────────────
 const demoReplies = [
   "Great question! For building muscle, focus on progressive overload — add weight or reps each week. Aim for 3-4 sets of 8-12 reps per exercise. 💪",
   "For fat loss, a slight calorie deficit (300-500 cal/day) combined with strength training is the most effective approach. Don't skip lifting!",
   "Recovery is just as important as training. Aim for 7-9 hours of sleep, stay hydrated, and have at least 1-2 rest days per week.",
   "Protein is your best friend! Aim for 0.7-1g per pound of bodyweight daily. Spread it across 3-4 meals for best absorption.",
   "For beginners, I recommend starting with 3 days/week full body workouts. Master the basics: squat, hinge, push, pull, carry.",
-  "Full AI coaching powered by Claude is coming in Week 3! For now, I'm here as a demo. Stay tuned! ⚡"
+  "Consistency beats perfection every time. A solid workout 3-4x per week for a year will transform your body. Trust the process! 🔥"
 ];
 let demoIndex = 0;
+
 function sendDemo() {
   const input = document.getElementById('demoInput');
   const text = input.value.trim();
   if (!text) return;
   input.value = '';
+
   const msgs = document.getElementById('demoMessages');
+
   const userDiv = document.createElement('div');
   userDiv.className = 'demo-msg user';
-  userDiv.innerHTML = `<div class="demo-bubble">${text}</div>`;
+  userDiv.innerHTML = '<div class="demo-bubble">' + text + '</div>';
   msgs.appendChild(userDiv);
+  msgs.scrollTop = msgs.scrollHeight;
+
   setTimeout(() => {
     const aiDiv = document.createElement('div');
     aiDiv.className = 'demo-msg ai';
-    aiDiv.innerHTML = `<div class="demo-bubble">${demoReplies[demoIndex % demoReplies.length]}</div>`;
+    aiDiv.innerHTML = '<div class="demo-bubble">' + demoReplies[demoIndex % demoReplies.length] + '</div>';
     msgs.appendChild(aiDiv);
     msgs.scrollTop = msgs.scrollHeight;
     demoIndex++;
   }, 600);
-  msgs.scrollTop = msgs.scrollHeight;
 }
-</script>
-</body>
-</html>
+
+document.addEventListener
