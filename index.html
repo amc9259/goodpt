@@ -635,4 +635,14 @@ function sendDemo() {
  }, 600);
 }
 
-document.addEv
+document.addEventListener('DOMContentLoaded', () => {
+  const input = document.getElementById('demoInput');
+  if (input) {
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Enter') sendDemo();
+    });
+  }
+});
+</script>
+</body>
+</html>
