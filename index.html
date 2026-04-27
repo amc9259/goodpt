@@ -258,7 +258,7 @@ footer p { font-size:0.78rem; color:var(--muted); }
   <li><a href="#" onclick="return showPage('about')" id="nav-about">About Us</a></li>
   <li><a href="#" onclick="return showPage('hiw')" id="nav-hiw">How It Works</a></li>
   <li><a href="#" onclick="return showPage('contact')" id="nav-contact">Contact</a></li>
-  <li id="nav-chat-li" style="display:none"><a href="#" onclick="return showPage('chat')" id="nav-chat" class="nav-cta">AI Coach &#x1F4AA;</a></li>
+  <li id="nav-chat-li" style="display:none"><a href="#" onclick="return showPage('chat')" id="nav-chat" class="nav-cta">AI Coach</a></li>
   <li id="nav-join-li"><a href="#" onclick="openAuthModal('signup');return false;" class="nav-cta">Join Now</a></li>
  </ul>
  <div id="nav-auth-area">
@@ -628,7 +628,7 @@ const SYSTEM_PROMPT = `You are GoodPT, a knowledgeable and motivating AI persona
 async function callGemini(userMsg) {
   const contents = [...chatHistory, { role:'user', parts:[{ text: userMsg }] }];
   const res = await fetch(
-    'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key='+geminiApiKey,
+    'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key='+geminiApiKey,
     { method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({
         system_instruction: { parts:[{ text: SYSTEM_PROMPT }] },
