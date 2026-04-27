@@ -373,7 +373,7 @@ footer p { font-size:0.78rem; color:var(--muted); }
     <div class="demo-dot" style="background:#febc2e"></div>
     <div class="demo-dot" style="background:#28c840"></div>
     <span style="font-family:'Space Mono',monospace;font-size:0.68rem;color:var(--muted);margin-left:0.5rem">GoodPT AI Coach &mdash; Live</span>
-    <span style="margin-left:auto;font-family:'Space Mono',monospace;font-size:0.62rem;color:var(--accent);">&#x26A1; Gemini AI</span>
+    <span style="margin-left:auto;font-family:'Space Mono',monospace;font-size:0.62rem;color:var(--accent);">&#x26A1; AI Coach</span>
    </div>
    <div class="demo-body" id="demoMessages">
     <div class="demo-msg ai">
@@ -413,7 +413,7 @@ footer p { font-size:0.78rem; color:var(--muted); }
      <div class="demo-dot" style="background:#febc2e"></div>
      <div class="demo-dot" style="background:#28c840"></div>
      <span style="font-family:'Space Mono',monospace;font-size:0.68rem;color:var(--muted);margin-left:0.5rem">GoodPT AI Coach &mdash; Live Session</span>
-     <span style="margin-left:auto;font-family:'Space Mono',monospace;font-size:0.62rem;color:var(--accent);">&#x26A1; Gemini AI</span>
+     <span style="margin-left:auto;font-family:'Space Mono',monospace;font-size:0.62rem;color:var(--accent);">&#x26A1; AI Coach</span>
     </div>
     <div class="demo-body" id="chatPageMessages" style="flex:1;min-height:0;max-height:none;">
      <div class="demo-msg ai">
@@ -467,7 +467,7 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 
 // ── STATE ─────────────────────────────────────────────────────
 let currentUser = null;
-const geminiApiKey = 'AIzaSyCodn3pLrKZzSqKDeCMR_31IsS1J_E38PE';
+const openRouterKey = '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';
 let chatHistory = [];
 
 // ── PERSIST AUTH ──────────────────────────────────────────────
@@ -618,7 +618,7 @@ function updateChatUI() {
   } else {
     gate.style.display='none'; shell.style.display='block';
     input.disabled=false; sendBtn.disabled=false;
-    status.textContent='⚡ Powered by Gemini AI · Ask me anything';
+    status.textContent='⚡ Powered by AI · Ask me anything';
   }
 }
 
@@ -626,26 +626,32 @@ function updateChatUI() {
 const SYSTEM_PROMPT = `You are GoodPT, a knowledgeable and motivating AI personal trainer. Help users with workout plans, exercise form, nutrition, recovery, and goal setting. Keep responses concise (2-4 sentences), practical, and encouraging. Use relevant emojis occasionally. If someone describes pain or injury, recommend consulting a professional. You are powered by Google Gemini.`;
 
 async function callGemini(userMsg) {
-  const contents = [...chatHistory, { role:'user', parts:[{ text: userMsg }] }];
-  const res = await fetch(
-    'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key='+geminiApiKey,
-    { method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({
-        system_instruction: { parts:[{ text: SYSTEM_PROMPT }] },
-        contents,
-        generationConfig: { maxOutputTokens:512, temperature:0.8 }
-      })
-    }
-  );
+  const messages = [
+    { role: 'system', content: SYSTEM_PROMPT },
+    ...chatHistory,
+    { role: 'user', content: userMsg }
+  ];
+  const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + openRouterKey
+    },
+    body: JSON.stringify({
+      model: 'google/gemini-2.0-flash-exp:free',
+      messages,
+      max_tokens: 512
+    })
+  });
   if (!res.ok) {
     const err = await res.json();
     throw new Error(err.error?.message || 'API error '+res.status);
   }
   const data = await res.json();
-  const reply = data.candidates?.[0]?.content?.parts?.[0]?.text;
+  const reply = data.choices?.[0]?.message?.content;
   if (!reply) throw new Error('Empty response');
-  chatHistory.push({ role:'user', parts:[{ text:userMsg }] });
-  chatHistory.push({ role:'model', parts:[{ text:reply }] });
+  chatHistory.push({ role: 'user', content: userMsg });
+  chatHistory.push({ role: 'assistant', content: reply });
   if (chatHistory.length > 20) chatHistory = chatHistory.slice(-20);
   return reply;
 }
@@ -653,7 +659,7 @@ async function callGemini(userMsg) {
 async function sendMessage() {
   const input = document.getElementById('demoInput');
   const text = input.value.trim();
-  if (!text || !geminiApiKey) return;
+  if (!text) return;
   input.value = '';
   const msgs = document.getElementById('demoMessages');
   const sendBtn = document.getElementById('demoSendBtn');
@@ -682,7 +688,7 @@ async function sendMessage() {
     aiDiv.className='demo-msg ai';
     aiDiv.innerHTML='<div class="demo-bubble">'+fmtMsg(reply)+'</div>';
     msgs.appendChild(aiDiv); msgs.scrollTop=msgs.scrollHeight;
-    status.textContent='⚡ Powered by Gemini AI · Ask me anything';
+    status.textContent='⚡ Powered by AI · Ask me anything';
   } catch(err) {
     document.getElementById('typing-ind')?.remove();
     let msg = '⚠️ Error: '+err.message;
@@ -696,7 +702,7 @@ async function sendMessage() {
     errDiv.className='demo-msg ai';
     errDiv.innerHTML='<div class="demo-bubble" style="color:#ff5f57;border-color:rgba(255,95,87,0.3)">'+msg+'</div>';
     msgs.appendChild(errDiv); msgs.scrollTop=msgs.scrollHeight;
-    status.textContent='⚡ Powered by Gemini AI · Ask me anything';
+    status.textContent='⚡ Powered by AI · Ask me anything';
   }
   input.disabled=false; sendBtn.disabled=false; input.focus();
 }
@@ -705,7 +711,7 @@ async function sendMessage() {
 async function sendChatPageMessage() {
   const input = document.getElementById('chatPageInput');
   const text = input.value.trim();
-  if (!text || !geminiApiKey) return;
+  if (!text) return;
   input.value = '';
   const msgs = document.getElementById('chatPageMessages');
   const sendBtn = document.getElementById('chatPageSendBtn');
