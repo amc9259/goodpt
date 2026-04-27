@@ -258,7 +258,8 @@ footer p { font-size:0.78rem; color:var(--muted); }
   <li><a href="#" onclick="return showPage('about')" id="nav-about">About Us</a></li>
   <li><a href="#" onclick="return showPage('hiw')" id="nav-hiw">How It Works</a></li>
   <li><a href="#" onclick="return showPage('contact')" id="nav-contact">Contact</a></li>
-  <li><a href="#" onclick="openAuthModal('signup');return false;" class="nav-cta">Join Now</a></li>
+  <li id="nav-chat-li" style="display:none"><a href="#" onclick="return showPage('chat')" id="nav-chat" class="nav-cta">AI Coach &#x1F4AA;</a></li>
+  <li id="nav-join-li"><a href="#" onclick="openAuthModal('signup');return false;" class="nav-cta">Join Now</a></li>
  </ul>
  <div id="nav-auth-area">
   <div id="nav-logged-out" style="display:flex;gap:0.5rem;">
@@ -393,6 +394,42 @@ footer p { font-size:0.78rem; color:var(--muted); }
  </footer>
 </div>
 
+<!-- CHAT PAGE -->
+<div class="page" id="page-chat">
+ <div style="display:flex;flex-direction:column;height:calc(100vh - 64px);">
+  <div style="padding:2rem 5rem 1.5rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+   <div>
+    <div class="page-tag">// Your Personal AI Coach</div>
+    <h1 class="page-title" style="font-size:2.5rem;">GOODPT <span style="color:var(--accent)">AI COACH.</span></h1>
+   </div>
+   <div style="font-family:'Space Mono',monospace;font-size:0.72rem;color:var(--muted);text-align:right;">
+    Signed in as<br><span style="color:var(--accent)" id="chat-page-email"></span>
+   </div>
+  </div>
+  <div style="flex:1;display:flex;flex-direction:column;padding:2rem 5rem;gap:1rem;max-width:900px;width:100%;margin:0 auto;box-sizing:border-box;">
+   <div class="demo-shell" style="flex:1;display:flex;flex-direction:column;max-width:100%;">
+    <div class="demo-toolbar">
+     <div class="demo-dot" style="background:#ff5f57"></div>
+     <div class="demo-dot" style="background:#febc2e"></div>
+     <div class="demo-dot" style="background:#28c840"></div>
+     <span style="font-family:'Space Mono',monospace;font-size:0.68rem;color:var(--muted);margin-left:0.5rem">GoodPT AI Coach &mdash; Live Session</span>
+     <span style="margin-left:auto;font-family:'Space Mono',monospace;font-size:0.62rem;color:var(--accent);">&#x26A1; Gemini AI</span>
+    </div>
+    <div class="demo-body" id="chatPageMessages" style="flex:1;min-height:0;max-height:none;">
+     <div class="demo-msg ai">
+      <div class="demo-bubble">Hey! I'm your GoodPT AI coach &#x1F4AA; Ask me anything &mdash; workout plans, exercise form, nutrition, recovery. What are we working on today?</div>
+     </div>
+    </div>
+    <div class="demo-input-row">
+     <input type="text" class="demo-input" id="chatPageInput" placeholder="Ask your AI coach anything...">
+     <button class="demo-send" id="chatPageSendBtn" onclick="sendChatPageMessage()">&#x27A4;</button>
+    </div>
+    <div class="demo-status">&#x26A1; Powered by Gemini AI &middot; Ask me anything</div>
+   </div>
+  </div>
+ </div>
+</div>
+
 <!-- CONTACT -->
 <div class="page" id="page-contact">
  <div class="page-hero">
@@ -510,7 +547,7 @@ async function doSignup() {
       const userId = data.user ? data.user.id : data.id;
       if (token) {
         saveAuthState({ id: userId, email, name, token });
-        updateAuthUI(); closeAuthModal();
+        updateAuthUI(); closeAuthModal(); showPage('chat');
       } else {
         sucEl.textContent = '✅ Account created! Check your email to confirm, then sign in.';
         sucEl.style.display = 'block';
@@ -538,7 +575,7 @@ async function doLogin() {
     } else if (data.access_token) {
       const name = (data.user?.user_metadata?.full_name) || email.split('@')[0];
       saveAuthState({ id: data.user.id, email, name, token: data.access_token });
-      updateAuthUI(); closeAuthModal();
+      updateAuthUI(); closeAuthModal(); showPage('chat');
     } else {
       errEl.textContent='Login failed. Please try again.'; errEl.style.display='block';
     }
@@ -547,18 +584,25 @@ async function doLogin() {
 }
 
 // ── LOGOUT ────────────────────────────────────────────────────
-function doLogout() { clearAuthState(); chatHistory=[]; updateAuthUI(); }
+function doLogout() { clearAuthState(); chatHistory=[]; updateAuthUI(); showPage('home'); }
 
 // ── UPDATE UI ─────────────────────────────────────────────────
 function updateAuthUI() {
   const out = document.getElementById('nav-logged-out');
   const inn = document.getElementById('nav-logged-in');
   const emailEl = document.getElementById('nav-user-email-display');
+  const chatLi = document.getElementById('nav-chat-li');
+  const joinLi = document.getElementById('nav-join-li');
   if (currentUser) {
     out.style.display='none'; inn.style.display='flex';
     emailEl.textContent = currentUser.email;
+    const cpe = document.getElementById('chat-page-email'); if(cpe) cpe.textContent = currentUser.email;
+    if (chatLi) chatLi.style.display='list-item';
+    if (joinLi) joinLi.style.display='none';
   } else {
     out.style.display='flex'; inn.style.display='none';
+    if (chatLi) chatLi.style.display='none';
+    if (joinLi) joinLi.style.display='list-item';
   }
   updateChatUI();
 }
@@ -584,7 +628,7 @@ const SYSTEM_PROMPT = `You are GoodPT, a knowledgeable and motivating AI persona
 async function callGemini(userMsg) {
   const contents = [...chatHistory, { role:'user', parts:[{ text: userMsg }] }];
   const res = await fetch(
-    'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key='+geminiApiKey,
+    'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key='+geminiApiKey,
     { method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({
         system_instruction: { parts:[{ text: SYSTEM_PROMPT }] },
@@ -657,6 +701,44 @@ async function sendMessage() {
   input.disabled=false; sendBtn.disabled=false; input.focus();
 }
 
+
+async function sendChatPageMessage() {
+  const input = document.getElementById('chatPageInput');
+  const text = input.value.trim();
+  if (!text || !geminiApiKey) return;
+  input.value = '';
+  const msgs = document.getElementById('chatPageMessages');
+  const sendBtn = document.getElementById('chatPageSendBtn');
+
+  const userDiv = document.createElement('div');
+  userDiv.className = 'demo-msg user';
+  userDiv.innerHTML = '<div class="demo-bubble">'+escHtml(text)+'</div>';
+  msgs.appendChild(userDiv);
+  msgs.scrollTop = msgs.scrollHeight;
+
+  input.disabled=true; sendBtn.disabled=true;
+
+  const typing = document.createElement('div');
+  typing.className='demo-msg ai'; typing.id='chat-typing';
+  typing.innerHTML='<div class="demo-bubble"><div class="typing-dots"><span></span><span></span><span></span></div></div>';
+  msgs.appendChild(typing); msgs.scrollTop=msgs.scrollHeight;
+
+  try {
+    const reply = await callGemini(text);
+    document.getElementById('chat-typing')?.remove();
+    const aiDiv = document.createElement('div');
+    aiDiv.className='demo-msg ai';
+    aiDiv.innerHTML='<div class="demo-bubble">'+fmtMsg(reply)+'</div>';
+    msgs.appendChild(aiDiv); msgs.scrollTop=msgs.scrollHeight;
+  } catch(err) {
+    document.getElementById('chat-typing')?.remove();
+    const errDiv=document.createElement('div');
+    errDiv.className='demo-msg ai';
+    errDiv.innerHTML='<div class="demo-bubble" style="color:#ff5f57;border-color:rgba(255,95,87,0.3)">&#x26A0;&#xFE0F; Error: '+escHtml(err.message)+'</div>';
+    msgs.appendChild(errDiv); msgs.scrollTop=msgs.scrollHeight;
+  }
+  input.disabled=false; sendBtn.disabled=false; input.focus();
+}
 function escHtml(t) { return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function fmtMsg(t) { return escHtml(t).replace(/\n\n/g,'<br><br>').replace(/\n/g,'<br>'); }
 
@@ -697,6 +779,8 @@ document.addEventListener('DOMContentLoaded', () => {
   loadAuthState();
   const di=document.getElementById('demoInput');
   if(di) di.addEventListener('keydown', e=>{ if(e.key==='Enter'&&!e.shiftKey) sendMessage(); });
+  const cpi=document.getElementById('chatPageInput');
+  if(cpi) cpi.addEventListener('keydown', e=>{ if(e.key==='Enter'&&!e.shiftKey) sendChatPageMessage(); });
   document.getElementById('login-password').addEventListener('keydown', e=>{ if(e.key==='Enter') doLogin(); });
   document.getElementById('signup-password').addEventListener('keydown', e=>{ if(e.key==='Enter') doSignup(); });
 });
