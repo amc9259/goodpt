@@ -638,7 +638,7 @@ async function callGemini(userMsg) {
       'Authorization': 'Bearer ' + openRouterKey
     },
     body: JSON.stringify({
-      model: 'mistralai/mistral-7b-instruct:free',
+      model: 'baidu/qianfan-ocr-fast:free',
       messages,
       max_tokens: 512
     })
